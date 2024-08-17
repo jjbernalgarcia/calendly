@@ -1,82 +1,77 @@
 (function() {
-  // Function to get URL parameter value
-  function getParameterByName(name) {
+    // Function to get URL parameter value
+    function getParameterByName(name) {
+        try {
+            name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
+            var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
+                results = regex.exec(location.search);
+            return results === null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
+        } catch (error) {
+            console.error("Error in getParameterByName:", error);
+            return "";
+        }
+    }
+
+    // Function to get the root domain
+    function getRootDomain() {
+        var parts = window.location.hostname.split('.');
+        if (parts.length > 2) {
+            return '.' + parts.slice(-2).join('.');
+        } else {
+            return '.' + window.location.hostname;
+        }
+    }
+
+    // Function to set a session cookie at the root domain level
+    function setSessionCookie(name, value) {
+        var domain = getRootDomain();
+        document.cookie = name + "=" + (value || "") + "; path=/; domain=" + domain + "; SameSite=Strict";
+    }
+
+    // Function to get a cookie
+    function getCookie(name) {
+        var nameEQ = name + "=";
+        var ca = document.cookie.split(';');
+        for(var i=0; i < ca.length; i++) {
+            var c = ca[i];
+            while (c.charAt(0)==' ') c = c.substring(1,c.length);
+            if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length,c.length);
+        }
+        return null;
+    }
+
     try {
-      name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
-      var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
-          results = regex.exec(location.search);
-      return results === null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
+        // Get values from URL parameters and store in cookies
+        var inviteeFullName = getParameterByName('invitee_full_name');
+        var inviteeEmail = getParameterByName('invitee_email');
+        var inviteePhone = getParameterByName('answer_1');
+
+        // Set session cookies at the root domain level
+        setSessionCookie('inviteeFullName', inviteeFullName);
+        setSessionCookie('inviteeEmail', inviteeEmail);
+        setSessionCookie('inviteePhone', inviteePhone);
+
+        // Remove the captured parameters and event_type_name from the URL
+        var newUrl = window.location.href.split('?')[0];
+        var params = new URLSearchParams(window.location.search);
+        params.delete('invitee_full_name');
+        params.delete('invitee_email');
+        params.delete('answer_1');
+        params.delete('event_type_name');
+
+        var remainingParams = params.toString();
+        if (remainingParams) {
+            newUrl += '?' + remainingParams;
+        }
+
+        // Update the URL without reloading the page
+        window.history.replaceState({}, document.title, newUrl);
+
+        // Log the captured values from cookies (for debugging purposes)
+        console.log("Invitee Full Name:", getCookie('inviteeFullName'));
+        console.log("Invitee Email:", getCookie('inviteeEmail'));
+        console.log("Invitee Phone:", getCookie('inviteePhone'));
     } catch (error) {
-      console.error("Error in getParameterByName:", error);
-      return "";
+        console.error("Error in main function:", error);
     }
-  }
-
-  // Function to set a cookie at the root domain level
-  function setCookie(name, value, days) {
-    var expires = "";
-    if (days) {
-      var date = new Date();
-      date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
-      expires = "; expires=" + date.toUTCString();
-    }
-    var domain = "; domain=" + getRootDomain();
-    document.cookie = name + "=" + (value || "") + expires + domain + "; path=/";
-  }
-
-  // Function to get the root domain
-  function getRootDomain() {
-    var parts = window.location.hostname.split('.');
-    if (parts.length > 2) {
-      return '.' + parts.slice(-2).join('.');
-    } else {
-      return '.' + window.location.hostname;
-    }
-  }
-
-  // Function to get a cookie
-  function getCookie(name) {
-    var nameEQ = name + "=";
-    var ca = document.cookie.split(';');
-    for(var i=0; i < ca.length; i++) {
-      var c = ca[i];
-      while (c.charAt(0)==' ') c = c.substring(1,c.length);
-      if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length,c.length);
-    }
-    return null;
-  }
-
-  try {
-    // Get values from URL parameters and store in cookies
-    var inviteeFullName = getParameterByName('invitee_full_name');
-    var inviteeEmail = getParameterByName('invitee_email');
-    var inviteePhone = getParameterByName('answer_1');
-
-    // Set cookies with a 1-day expiration at the root domain level
-    setCookie('inviteeFullName', inviteeFullName, 1);
-    setCookie('inviteeEmail', inviteeEmail, 1);
-    setCookie('inviteePhone', inviteePhone, 1);
-
-    // Remove the captured parameters and event_type_name from the URL
-    var newUrl = window.location.href.split('?')[0];
-    var params = new URLSearchParams(window.location.search);
-    params.delete('invitee_full_name');
-    params.delete('invitee_email');
-    params.delete('answer_1');
-    params.delete('event_type_name');
-    
-    var remainingParams = params.toString();
-    if (remainingParams) {
-      newUrl += '?' + remainingParams;
-    }
-    // Update the URL without reloading the page
-    window.history.replaceState({}, document.title, newUrl);
-
-    // Log the captured values from cookies (for debugging purposes)
-    console.log("Invitee Full Name:", getCookie('inviteeFullName'));
-    console.log("Invitee Email:", getCookie('inviteeEmail'));
-    console.log("Invitee Phone:", getCookie('inviteePhone'));
-  } catch (error) {
-    console.error("Error in main function:", error);
-  }
 })();
