@@ -1,0 +1,45 @@
+  (function() {
+    // Function to get URL parameter value
+    function getParameterByName(name) {
+      try {
+        name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
+        var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
+            results = regex.exec(location.search);
+        return results === null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
+      } catch (error) {
+        console.error("Error in getParameterByName:", error);
+        return "";
+      }
+    }
+
+    try {
+      // Get values from URL parameters and store in global variables
+      window.inviteeFullName = getParameterByName('invitee_full_name');
+      window.inviteeEmail = getParameterByName('invitee_email');
+      window.inviteePhone = getParameterByName('answer_1'); // New line to capture phone number
+
+      // Remove the captured parameters and event_type_name from the URL
+      var newUrl = window.location.href.split('?')[0];
+      var params = new URLSearchParams(window.location.search);
+      params.delete('invitee_full_name');
+      params.delete('invitee_email');
+      params.delete('answer_1'); // New line to remove phone number parameter
+      params.delete('event_type_name');
+      
+      var remainingParams = params.toString();
+      if (remainingParams) {
+        newUrl += '?' + remainingParams;
+      }
+
+      // Update the URL without reloading the page
+      window.history.replaceState({}, document.title, newUrl);
+
+      // Log the captured variables (for debugging purposes)
+      console.log("Invitee Full Name:", window.inviteeFullName);
+      console.log("Invitee Email:", window.inviteeEmail);
+      console.log("Invitee Phone:", window.inviteePhone);
+
+    } catch (error) {
+      console.error("Error in main function:", error);
+    }
+  })();
